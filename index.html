@@ -655,6 +655,7 @@
             <button class="data-btn" onclick="exportCSV()">📥 匯出</button>
             <button class="data-btn" onclick="document.getElementById('import-file').click()">📤 匯入</button>
             <button class="data-btn" onclick="showCategoryModal()">🏷️ 類別</button>
+            <button class="data-btn" onclick="shareData()">🔗 分享</button>
             <input type="file" id="import-file" accept=".csv" style="display:none" onchange="importCSV(event)">
         </div>
 
@@ -941,11 +942,7 @@
 
         // Init
         render();
-        
-        // Set default date to today
-        document.getElementById('income-date').valueAsDate = new Date();
-        document.getElementById('expense-date').valueAsDate = new Date();
-        
+
         // Category Management Functions
         function showCategoryModal() {
             document.getElementById('category-modal').classList.add('show');
@@ -1031,6 +1028,60 @@
         function saveCategories() {
             localStorage.setItem('piggyCategories', JSON.stringify(categories));
         }
+        
+        // Share Data
+        function shareData() {
+            const data = {
+                records: records,
+                categories: categories,
+                exportTime: new Date().toISOString()
+            };
+            
+            // Encode to base64
+            const encoded = btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+            const shareUrl = window.location.href.split('?')[0] + '?data=' + encoded;
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                showToast('🔗 分享連結已複製到剪貼簿！');
+            }).catch(() => {
+                // Fallback: show prompt
+                prompt('分享連結：', shareUrl);
+            });
+        }
+        
+        // Load shared data on startup
+        function loadSharedData() {
+            const params = new URLSearchParams(window.location.search);
+            const data = params.get('data');
+            if (data) {
+                try {
+                    const decoded = JSON.parse(decodeURIComponent(escape(atob(data))));
+                    if (decoded.records) {
+                        records = decoded.records;
+                        localStorage.setItem('piggyRecords', JSON.stringify(records));
+                    }
+                    if (decoded.categories) {
+                        categories = decoded.categories;
+                        localStorage.setItem('piggyCategories', JSON.stringify(categories));
+                    }
+                    // Remove query string
+                    window.history.replaceState({}, '', window.location.pathname);
+                    showToast('📥 已載入分享的資料！');
+                    render();
+                } catch (e) {
+                    console.error('載入分享資料失敗', e);
+                }
+            }
+        }
+        
+        // Init
+        loadSharedData();
+        render();
+        
+        // Set default date to today
+        document.getElementById('income-date').valueAsDate = new Date();
+        document.getElementById('expense-date').valueAsDate = new Date();
     </script>
 </body>
 </html>
