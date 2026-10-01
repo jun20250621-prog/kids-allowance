@@ -396,6 +396,148 @@
         .toast.show {
             opacity: 1;
         }
+
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--white);
+            border-radius: 20px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            color: var(--primary);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+        }
+
+        .category-section {
+            margin-bottom: 20px;
+        }
+
+        .category-section h4 {
+            margin-bottom: 10px;
+            color: var(--text);
+        }
+
+        .category-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background: var(--bg);
+            border-radius: 10px;
+            margin-bottom: 8px;
+        }
+
+        .category-item .cat-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-item .cat-icon {
+            font-size: 1.2rem;
+        }
+
+        .category-item .cat-name {
+            font-weight: bold;
+        }
+
+        .category-item .cat-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .category-item .cat-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 5px;
+            border-radius: 5px;
+            transition: background 0.2s;
+        }
+
+        .category-item .cat-actions button:hover {
+            background: #eee;
+        }
+
+        .add-category-btn {
+            width: 100%;
+            padding: 12px;
+            border: 2px dashed #ccc;
+            border-radius: 10px;
+            background: none;
+            color: #888;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s;
+        }
+
+        .add-category-btn:hover {
+            border-color: var(--secondary);
+            color: var(--secondary);
+        }
+
+        /* Date Input */
+        .date-input-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .date-input-group label {
+            font-weight: bold;
+            white-space: nowrap;
+        }
+
+        .date-input-group input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #eee;
+            border-radius: 12px;
+            font-size: 1rem;
+        }
+
+        .date-input-group input:focus {
+            outline: none;
+            border-color: var(--secondary);
+        }
     </style>
 </head>
 <body>
@@ -436,19 +578,17 @@
             <div class="form-card">
                 <div class="form-title">➕ 新增收入</div>
                 <form id="income-form">
+                    <div class="date-input-group">
+                        <label>📅 日期</label>
+                        <input type="date" id="income-date" required>
+                    </div>
                     <div class="form-group">
                         <label>💰 金額</label>
                         <input type="number" id="income-amount" placeholder="多少錢？" min="1" required>
                     </div>
                     <div class="form-group">
                         <label>📝 類型</label>
-                        <select id="income-category">
-                            <option value="零用錢">🆓 零用錢</option>
-                            <option value="獎勵">🏆 獎勵</option>
-                            <option value="紅包">🧧 紅包</option>
-                            <option value="打工">💼 打工</option>
-                            <option value="其他">📦 其他</option>
-                        </select>
+                        <select id="income-category"></select>
                     </div>
                     <div class="form-group">
                         <label>📋 備註</label>
@@ -464,20 +604,17 @@
             <div class="form-card">
                 <div class="form-title">➖ 新增支出</div>
                 <form id="expense-form">
+                    <div class="date-input-group">
+                        <label>📅 日期</label>
+                        <input type="date" id="expense-date" required>
+                    </div>
                     <div class="form-group">
                         <label>💸 金額</label>
                         <input type="number" id="expense-amount" placeholder="多少錢？" min="1" required>
                     </div>
                     <div class="form-group">
                         <label>📝 類型</label>
-                        <select id="expense-category">
-                            <option value="零食">🍬 零食</option>
-                            <option value="玩具">🎮 玩具</option>
-                            <option value="文具">✏️ 文具</option>
-                            <option value="遊戲">🎮 遊戲</option>
-                            <option value="孝親">❤️ 孝親</option>
-                            <option value="其他">📦 其他</option>
-                        </select>
+                        <select id="expense-category"></select>
                     </div>
                     <div class="form-group">
                         <label>📋 備註</label>
@@ -517,7 +654,30 @@
         <div class="data-buttons">
             <button class="data-btn" onclick="exportCSV()">📥 匯出</button>
             <button class="data-btn" onclick="document.getElementById('import-file').click()">📤 匯入</button>
+            <button class="data-btn" onclick="showCategoryModal()">🏷️ 類別</button>
             <input type="file" id="import-file" accept=".csv" style="display:none" onchange="importCSV(event)">
+        </div>
+
+        <!-- Category Management Modal -->
+        <div id="category-modal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>🏷️ 管理類別</h3>
+                    <button class="close-btn" onclick="closeCategoryModal()">✕</button>
+                </div>
+                <div class="modal-body">
+                    <div class="category-section">
+                        <h4>💰 收入類別</h4>
+                        <div id="income-categories" class="category-list"></div>
+                        <button class="add-category-btn" onclick="addCategory('income')">➕ 新增類別</button>
+                    </div>
+                    <div class="category-section">
+                        <h4>💸 支出類別</h4>
+                        <div id="expense-categories" class="category-list"></div>
+                        <button class="add-category-btn" onclick="addCategory('expense')">➕ 新增類別</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -527,6 +687,25 @@
     <script>
         // Data
         let records = JSON.parse(localStorage.getItem('piggyRecords')) || [];
+        
+        // Categories - stored in localStorage
+        let categories = JSON.parse(localStorage.getItem('piggyCategories')) || {
+            income: [
+                { id: 1, icon: '🆓', name: '零用錢' },
+                { id: 2, icon: '🏆', name: '獎勵' },
+                { id: 3, icon: '🧧', name: '紅包' },
+                { id: 4, icon: '💼', name: '打工' },
+                { id: 5, icon: '📦', name: '其他' }
+            ],
+            expense: [
+                { id: 1, icon: '🍬', name: '零食' },
+                { id: 2, icon: '🎮', name: '玩具' },
+                { id: 3, icon: '✏️', name: '文具' },
+                { id: 4, icon: '🎮', name: '遊戲' },
+                { id: 5, icon: '❤️', name: '孝親' },
+                { id: 6, icon: '📦', name: '其他' }
+            ]
+        };
 
         // Icons
         const categoryIcons = {
@@ -546,6 +725,20 @@
         function render() {
             renderBalance();
             renderRecords();
+            renderCategorySelects();
+        }
+
+        function renderCategorySelects() {
+            const incomeSelect = document.getElementById('income-category');
+            const expenseSelect = document.getElementById('expense-category');
+            
+            incomeSelect.innerHTML = categories.income.map(c => 
+                `<option value="${c.name}">${c.icon} ${c.name}</option>`
+            ).join('');
+            
+            expenseSelect.innerHTML = categories.expense.map(c => 
+                `<option value="${c.name}">${c.icon} ${c.name}</option>`
+            ).join('');
         }
 
         function renderBalance() {
@@ -591,7 +784,18 @@
 
         function formatDate(dateStr) {
             const d = new Date(dateStr);
-            return `${d.getMonth()+1}/${d.getDate()}`;
+            const today = new Date();
+            const yesterday = new Date(today);
+            yesterday.setDate(yesterday.getDate() - 1);
+            
+            const dateStr2 = d.toDateString();
+            if (dateStr2 === today.toDateString()) {
+                return '今天';
+            } else if (dateStr2 === yesterday.toDateString()) {
+                return '昨天';
+            } else {
+                return `${d.getMonth()+1}/${d.getDate()}`;
+            }
         }
 
         // Tab
@@ -606,16 +810,17 @@
         // Add Record
         document.getElementById('income-form').addEventListener('submit', function(e) {
             e.preventDefault();
+            const date = document.getElementById('income-date').value;
             const amount = parseInt(document.getElementById('income-amount').value);
             const category = document.getElementById('income-category').value;
             const note = document.getElementById('income-note').value;
 
             records.push({
                 type: 'income',
+                date: new Date(date).toISOString(),
                 amount: amount,
                 category: category,
-                note: note,
-                date: new Date().toISOString()
+                note: note
             });
 
             save();
@@ -626,16 +831,17 @@
 
         document.getElementById('expense-form').addEventListener('submit', function(e) {
             e.preventDefault();
+            const date = document.getElementById('expense-date').value;
             const amount = parseInt(document.getElementById('expense-amount').value);
             const category = document.getElementById('expense-category').value;
             const note = document.getElementById('expense-note').value;
 
             records.push({
                 type: 'expense',
+                date: new Date(date).toISOString(),
                 amount: amount,
                 category: category,
-                note: note,
-                date: new Date().toISOString()
+                note: note
             });
 
             save();
@@ -735,6 +941,96 @@
 
         // Init
         render();
+        
+        // Set default date to today
+        document.getElementById('income-date').valueAsDate = new Date();
+        document.getElementById('expense-date').valueAsDate = new Date();
+        
+        // Category Management Functions
+        function showCategoryModal() {
+            document.getElementById('category-modal').classList.add('show');
+            renderCategories();
+        }
+        
+        function closeCategoryModal() {
+            document.getElementById('category-modal').classList.remove('show');
+        }
+        
+        function renderCategories() {
+            const incomeList = document.getElementById('income-categories');
+            const expenseList = document.getElementById('expense-categories');
+            
+            incomeList.innerHTML = categories.income.map(c => `
+                <div class="category-item">
+                    <div class="cat-info">
+                        <span class="cat-icon">${c.icon}</span>
+                        <span class="cat-name">${c.name}</span>
+                    </div>
+                    <div class="cat-actions">
+                        <button onclick="editCategory('income', ${c.id})" title="編輯">✏️</button>
+                        <button onclick="deleteCategory('income', ${c.id})" title="刪除">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+            
+            expenseList.innerHTML = categories.expense.map(c => `
+                <div class="category-item">
+                    <div class="cat-info">
+                        <span class="cat-icon">${c.icon}</span>
+                        <span class="cat-name">${c.name}</span>
+                    </div>
+                    <div class="cat-actions">
+                        <button onclick="editCategory('expense', ${c.id})" title="編輯">✏️</button>
+                        <button onclick="deleteCategory('expense', ${c.id})" title="刪除">🗑️</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function addCategory(type) {
+            const icon = prompt('請輸入圖示（如 🍎、🎮）：', '📦');
+            if (!icon) return;
+            const name = prompt('請輸入類別名稱：');
+            if (!name) return;
+            
+            const newId = Math.max(...categories[type].map(c => c.id), 0) + 1;
+            categories[type].push({ id: newId, icon: icon, name: name });
+            saveCategories();
+            renderCategories();
+            renderCategorySelects();
+            showToast('➕ 已新增類別');
+        }
+        
+        function editCategory(type, id) {
+            const cat = categories[type].find(c => c.id === id);
+            if (!cat) return;
+            
+            const icon = prompt('請輸入圖示：', cat.icon);
+            if (!icon) return;
+            const name = prompt('請輸入類別名稱：', cat.name);
+            if (!name) return;
+            
+            cat.icon = icon;
+            cat.name = name;
+            saveCategories();
+            renderCategories();
+            renderCategorySelects();
+            showToast('✏️ 已更新類別');
+        }
+        
+        function deleteCategory(type, id) {
+            if (!confirm('確定要刪除這個類別嗎？')) return;
+            
+            categories[type] = categories[type].filter(c => c.id !== id);
+            saveCategories();
+            renderCategories();
+            renderCategorySelects();
+            showToast('🗑️ 已刪除類別');
+        }
+        
+        function saveCategories() {
+            localStorage.setItem('piggyCategories', JSON.stringify(categories));
+        }
     </script>
 </body>
 </html>
