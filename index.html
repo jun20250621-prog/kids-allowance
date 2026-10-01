@@ -307,8 +307,17 @@
         /* Data Management */
         .data-buttons {
             display: flex;
-            gap: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
             margin-top: 20px;
+        }
+
+        .data-buttons .data-btn {
+            flex: 1 1 calc(50% - 4px);
+            min-width: 0;
+            text-align: center;
+            padding: 12px 8px;
+            font-size: 0.85rem;
         }
 
         .data-btn {
