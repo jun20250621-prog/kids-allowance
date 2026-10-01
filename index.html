@@ -726,12 +726,29 @@
                 </div>
             </div>
         </div>
-    </div>
+    
+        <div id="sync-modal" class="modal">
+            <div class="modal-content sync-modal-content">
+                <div class="modal-header"><h3>☁️ 雲端同步設定</h3><button class="close-btn" onclick="closeSyncModal()">✕</button></div>
+                <div class="modal-body">
+                    <div class="sync-status-display" id="sync-status-display"><div class="status-icon">🔗</div><div class="status-text">尚未設定同步</div></div>
+                    <div class="sync-info-box">💡 填入 GitHub Token 並儲存，之後點「推送」即可同步至 Gist。</div>
+                    <div class="sync-form-group"><label>🔑 GitHub Personal Access Token</label><input type="password" id="sync-pat" placeholder="ghp_xxxxxxxxxxxx"><div class="hint">需具備 gist 權限</div></div>
+                    <div class="sync-form-group"><label>📋 Gist ID</label><input type="text" id="sync-gist-id" value="54fba93beb5088bbe7a8629daed5d0e5" readonly><div class="hint">已預填，請勿修改</div></div>
+                    <div class="sync-actions"><button class="sync-btn-modal secondary" onclick="testConnection()" id="test-btn">🔍 測試連線</button><button class="sync-btn-modal primary" onclick="saveSyncSettings()" id="save-btn">💾 儲存設定</button></div>
+                    <div class="sync-actions"><button class="sync-btn-modal secondary" onclick="pullFromGist()" id="pull-btn" disabled>⬇️ 拉取</button><button class="sync-btn-modal primary" onclick="pushToGist()" id="push-btn" disabled>⬆️ 推送</button></div>
+                    <div class="last-sync-time" id="last-sync-time"></div>
+                    <a class="gist-link" id="gist-link" href="#" target="_blank"></a>
+                </div>
+            </div>
+        </div>
+</div>
 
     <!-- Toast -->
     <div class="toast" id="toast"></div>
 
     <script>
+
         // Data
         let records = JSON.parse(localStorage.getItem('piggyRecords')) || [];
         
@@ -1033,21 +1050,6 @@
                         <button onclick="editCategory('expense', ${c.id})" title="編輯">✏️</button>
                         <button onclick="deleteCategory('expense', ${c.id})" title="刪除">🗑️</button>
                     
-        <div id="sync-modal" class="modal">
-            <div class="modal-content sync-modal-content">
-                <div class="modal-header"><h3>☁️ 雲端同步設定</h3><button class="close-btn" onclick="closeSyncModal()">✕</button></div>
-                <div class="modal-body">
-                    <div class="sync-status-display" id="sync-status-display"><div class="status-icon">🔗</div><div class="status-text">尚未設定同步</div></div>
-                    <div class="sync-info-box">💡 填入 GitHub Token 並儲存，之後點「推送」即可同步至 Gist。</div>
-                    <div class="sync-form-group"><label>🔑 GitHub Personal Access Token</label><input type="password" id="sync-pat" placeholder="ghp_xxxxxxxxxxxx"><div class="hint">需具備 gist 權限</div></div>
-                    <div class="sync-form-group"><label>📋 Gist ID</label><input type="text" id="sync-gist-id" value="54fba93beb5088bbe7a8629daed5d0e5" readonly><div class="hint">已預填，請勿修改</div></div>
-                    <div class="sync-actions"><button class="sync-btn-modal secondary" onclick="testConnection()" id="test-btn">🔍 測試連線</button><button class="sync-btn-modal primary" onclick="saveSyncSettings()" id="save-btn">💾 儲存設定</button></div>
-                    <div class="sync-actions"><button class="sync-btn-modal secondary" onclick="pullFromGist()" id="pull-btn" disabled>⬇️ 拉取</button><button class="sync-btn-modal primary" onclick="pushToGist()" id="push-btn" disabled>⬆️ 推送</button></div>
-                    <div class="last-sync-time" id="last-sync-time"></div>
-                    <a class="gist-link" id="gist-link" href="#" target="_blank"></a>
-                </div>
-            </div>
-        </div>
 </div>
                 </div>
             `).join('');
@@ -1163,6 +1165,7 @@
         async function pullFromGist(){var p=syncSettings.pat||document.getElementById('sync-pat').value.trim(),g=syncSettings.gistId||document.getElementById('sync-gist-id').value.trim();if(!p||!g){showToast('⚠️ 請先設定 PAT 和 Gist ID');return}var pb=document.getElementById('pull-btn');pb.innerHTML='<span class="spinner"></span>拉取中...';pb.disabled=true;var b=document.getElementById('sync-banner'),bt=document.getElementById('sync-banner-text');b.style.display='flex';b.className='sync-banner syncing';bt.textContent='☁️ 同步中...';try{var resp=await fetch('https://api.github.com/gists/'+g,{method:'GET',headers:{'Authorization':'Bearer '+p,'Accept':'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}});if(resp.ok){var gist=await resp.json(),f=gist.files[GIST_FILENAME];if(!f)throw new Error('Gist 中找不到備份檔案');var data=JSON.parse(f.content);if(data.records&&data.records.length>0){var lk={};records.forEach(function(r){lk[r.date+'|'+r.amount+'|'+r.type+'|'+r.category]=true});var nc=0;data.records.forEach(function(r){var k=r.date+'|'+r.amount+'|'+r.type+'|'+r.category;if(!lk[k]){records.push(r);nc++}});if(data.categories){['income','expense'].forEach(function(t){if(data.categories[t]){var ex={};categories[t].forEach(function(c){ex[c.name]=true});data.categories[t].forEach(function(c){if(!ex[c.name])categories[t].push(c)})}})}save();render();showToast(nc>0?'⬇️ 拉取成功！新增 '+nc+' 筆記錄':'⬇️ 拉取成功！沒有新資料')}else{showToast('⬇️ Gist 中沒有資料')}syncSettings.lastSync=new Date().toISOString();localStorage.setItem('piggySyncSettings',JSON.stringify(syncSettings));b.className='sync-banner synced';bt.textContent='☁️ 已同步至 GitHub Gist';updateSyncModalStatus();updateSyncBanner()}else if(resp.status===404){throw new Error('找不到指定的 Gist')}else{throw new Error('拉取失敗：'+resp.status)}}catch(err){b.className='sync-banner error';bt.textContent='❌ 同步失敗';showToast('❌ '+err.message);setTimeout(function(){updateSyncBanner()},3000)}pb.innerHTML='⬇️ 拉取';pb.disabled=!(syncSettings.pat&&syncSettings.gistId)}
         updateSyncBanner();
 
-        </script>
+        
+</script>
 </body>
 </html>
